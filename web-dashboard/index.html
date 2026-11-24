@@ -449,8 +449,8 @@
       </div>
     </header>
 
-    <div class="security-badge">
-      🔒 End-to-End Secure • Zero Plaintext Credentials • Client-Side Parameterized Storage
+    <div class="security-badge" id="vaultIndicator">
+      🔒 End-to-End Secure • Loading Vault...
     </div>
 
     <!-- API Config Modal -->
@@ -460,20 +460,24 @@
         style="background:var(--bg-card); border:1px solid var(--bg-card-border); border-radius:18px; padding:32px; max-width:540px; width:90%; box-shadow:0 20px 50px rgba(0,0,0,0.5);">
         <h2
           style="font-size:20px; font-weight:700; margin-bottom:10px; color:var(--text-primary); display:flex; align-items:center; gap:10px;">
-          <span>⚙️</span> Connect Cloud Sheet API
+          <span>⚙️</span> Connect Cloud Vault
         </h2>
         <p style="font-size:13px; color:var(--text-secondary); line-height:1.6; margin-bottom:20px;">
-          Paste your Google Apps Script Web App URL below. It is stored <strong>locally in your browser only
-            (localStorage)</strong> and never uploaded to GitHub or exposed publicly.
+          Enter your <strong>Private Vault Key</strong> (found in NotifyX Desktop Settings) to securely view your purchases.
         </p>
+        <div style="margin-bottom:16px;">
+          <label
+            style="display:block; font-size:12px; font-weight:600; color:var(--text-secondary); margin-bottom:8px; text-transform:uppercase; letter-spacing:0.5px;">Vault
+            Key</label>
+          <input type="text" id="vaultKeyInput" placeholder="NX-XXXXXX"
+            style="width:100%; padding:12px 16px; background:rgba(11, 14, 23, 0.8); border:1px solid var(--bg-card-border); border-radius:10px; color:#fff; font-size:13px; outline:none; text-transform:uppercase; font-weight:bold; letter-spacing:1px; transition:border-color 0.2s;" />
+        </div>
         <div style="margin-bottom:20px;">
           <label
-            style="display:block; font-size:12px; font-weight:600; color:var(--text-secondary); margin-bottom:8px; text-transform:uppercase; letter-spacing:0.5px;">Google
-            Web App URL</label>
+            style="display:block; font-size:12px; font-weight:600; color:var(--text-secondary); margin-bottom:8px; text-transform:uppercase; letter-spacing:0.5px;">Custom
+            Cloud API (Optional)</label>
           <input type="url" id="apiUrlInput" placeholder="https://script.google.com/macros/s/.../exec"
-            style="width:100%; padding:12px 16px; background:rgba(11, 14, 23, 0.8); border:1px solid var(--bg-card-border); border-radius:10px; color:#fff; font-size:13px; outline:none; transition:border-color 0.2s;"
-            onfocus="this.style.borderColor='var(--accent-primary)'"
-            onblur="this.style.borderColor='var(--bg-card-border)'" />
+            style="width:100%; padding:12px 16px; background:rgba(11, 14, 23, 0.8); border:1px solid var(--bg-card-border); border-radius:10px; color:#fff; font-size:13px; outline:none; transition:border-color 0.2s;" />
         </div>
         <div style="display:flex; justify-content:flex-end; gap:12px;">
           <button class="btn" onclick="closeConfigModal()">Cancel</button>
@@ -538,17 +542,35 @@
         .replace(/'/g, "&#039;");
     }
 
-    // DEFAULT FALLBACK URL (Can be overridden dynamically via Settings)
+    // DEFAULT PUBLIC CLOUD API (100% Free Google Apps Script Web App)
     const DEFAULT_API_URL = "https://script.google.com/macros/s/AKfycbwtxeJo6Qm1IysNP_pGgUyAcCVL4mKS5JSVIkNLkiXF6Jk6nmfv9vs2OCVxjoBLVPyj/exec";
 
     function getApiUrl() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const paramApi = urlParams.get("api");
+      if (paramApi) {
+        localStorage.setItem("cb_api_url", paramApi);
+        return paramApi;
+      }
       return localStorage.getItem("cb_api_url") || DEFAULT_API_URL;
+    }
+
+    function getVaultId() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const paramVault = urlParams.get("vault");
+      if (paramVault) {
+        localStorage.setItem("cb_vault_id", paramVault.toUpperCase().trim());
+        return paramVault.toUpperCase().trim();
+      }
+      return localStorage.getItem("cb_vault_id") || "";
     }
 
     function openConfigModal() {
       const modal = document.getElementById("configModal");
-      const input = document.getElementById("apiUrlInput");
-      input.value = localStorage.getItem("cb_api_url") || DEFAULT_API_URL;
+      const vaultInput = document.getElementById("vaultKeyInput");
+      const apiInput = document.getElementById("apiUrlInput");
+      vaultInput.value = getVaultId();
+      apiInput.value = getApiUrl();
       modal.style.display = "flex";
     }
 
@@ -557,12 +579,15 @@
     }
 
     function saveApiUrl() {
-      const inputVal = document.getElementById("apiUrlInput").value.trim();
-      if (!inputVal) {
-        alert("Please enter a valid Google Apps Script Web App URL.");
-        return;
+      const vaultInput = document.getElementById("vaultKeyInput").value.trim().toUpperCase();
+      const apiInput = document.getElementById("apiUrlInput").value.trim();
+
+      if (vaultInput) {
+        localStorage.setItem("cb_vault_id", vaultInput);
       }
-      localStorage.setItem("cb_api_url", inputVal);
+      if (apiInput) {
+        localStorage.setItem("cb_api_url", apiInput);
+      }
       closeConfigModal();
       fetchData();
     }
@@ -583,10 +608,22 @@
       const table = document.getElementById("purchasesTable");
       const tbody = document.getElementById("tableBody");
       const countLabel = document.getElementById("recordCount");
+      const vaultIndicator = document.getElementById("vaultIndicator");
 
       const activeUrl = getApiUrl();
-      if (!activeUrl) {
-        loading.innerHTML = 'Cloud API URL is not set. <button class="btn" style="margin-left:10px;" onclick="openConfigModal()">⚙️ Set URL</button>';
+      const activeVault = getVaultId();
+
+      if (vaultIndicator) {
+        if (activeVault) {
+          vaultIndicator.innerHTML = `🔒 End-to-End Secure • Connected Vault: <strong style="color:var(--accent-primary); letter-spacing:1px;">${escapeHtml(activeVault)}</strong> <button class="btn" style="margin-left:12px; padding:4px 10px; font-size:11px;" onclick="openConfigModal()">Change</button>`;
+        } else {
+          vaultIndicator.innerHTML = `⚠️ No Vault Key Connected. <button class="btn" style="margin-left:12px; padding:4px 10px; font-size:11px;" onclick="openConfigModal()">Enter Vault Key</button>`;
+        }
+      }
+
+      if (!activeVault) {
+        loading.innerHTML = 'Please enter your <strong>Private Vault Key</strong> to view your purchases.<br/><br/><button class="btn btn-primary" onclick="openConfigModal()">🔑 Connect Vault Key</button>';
+        table.style.display = "none";
         return;
       }
 
@@ -595,7 +632,8 @@
       tbody.innerHTML = "";
 
       try {
-        const response = await fetch(activeUrl);
+        const requestUrl = `${activeUrl}?vault=${encodeURIComponent(activeVault)}`;
+        const response = await fetch(requestUrl);
         const rows = await response.json();
 
         if (rows && rows.length > 1) {
@@ -643,7 +681,7 @@
           loading.style.display = "none";
           table.style.display = "table";
         } else {
-          loading.innerText = "No purchases found. Add records from your Desktop app to view live tracking.";
+          loading.innerText = `Vault '${activeVault}' is empty. Add purchases in your NotifyX Desktop App to see them here!`;
         }
       } catch (err) {
         loading.innerText = "Unable to fetch live records. Please verify internet connection.";

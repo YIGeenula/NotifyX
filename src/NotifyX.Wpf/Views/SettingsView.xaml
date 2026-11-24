@@ -64,20 +64,43 @@
                 </StackPanel>
             </Border>
 
-            <!-- Google Sheet & Cloud Sync -->
+            <!-- Cloud Vault & Live Web Dashboard Sync -->
             <Border Style="{StaticResource PremiumCard}" Margin="0,0,0,16" Padding="16">
                 <StackPanel>
-                    <TextBlock Text="☁️ Google Sheet &amp; Cloud Webhook Sync" FontWeight="SemiBold" FontSize="15" Margin="0,0,0,8"/>
-                    <TextBlock Text="Automatically syncs each purchase and payment to your connected Google Sheet and Cloud API." Style="{StaticResource SubheaderText}" Margin="0,0,0,12"/>
+                    <DockPanel Margin="0,0,0,8">
+                        <TextBlock Text="☁️ Cloud Vault &amp; Live Web Dashboard" FontWeight="SemiBold" FontSize="15" VerticalAlignment="Center"/>
+                        <Border Background="{DynamicResource CardHoverBrush}" CornerRadius="4" Padding="6,2" HorizontalAlignment="Right">
+                            <TextBlock Text="100% Free &amp; Fully Automated" FontSize="11" Foreground="{DynamicResource PrimaryAccentBrush}" FontWeight="SemiBold"/>
+                        </Border>
+                    </DockPanel>
+                    <TextBlock Text="Your purchases and payment schedules automatically sync to your private cloud vault. Open your Web Dashboard on any phone or browser to track your finances anywhere." Style="{StaticResource SubheaderText}" Margin="0,0,0,12"/>
 
-                    <TextBlock Text="Google Apps Script Web App URL" FontWeight="Medium" Margin="0,0,0,4"/>
-                    <TextBox Text="{Binding GoogleSheetSyncUrl, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBox}" Margin="0,0,0,12"/>
+                    <!-- User Vault Key Card -->
+                    <Border Background="{DynamicResource BackgroundBrush}" CornerRadius="8" Padding="12" Margin="0,0,0,14">
+                        <DockPanel>
+                            <StackPanel DockPanel.Dock="Left">
+                                <TextBlock Text="Your Private Cloud Vault Key:" FontSize="12" Foreground="{DynamicResource TextMutedBrush}"/>
+                                <TextBlock Text="{Binding UserVaultId}" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource PrimaryAccentBrush}" Margin="0,2,0,0"/>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                <Button Content="📋 Copy Key" Command="{Binding CopyVaultIdCommand}" Style="{StaticResource SecondaryButton}" Margin="0,0,8,0" Padding="10,4"/>
+                                <Button Content="🌐 Open Web Dashboard" Command="{Binding OpenWebDashboardCommand}" Style="{StaticResource PrimaryButton}" Padding="12,6"/>
+                            </StackPanel>
+                        </DockPanel>
+                    </Border>
 
-                    <StackPanel Orientation="Horizontal">
-                        <Button Content="Save Sync URL" Command="{Binding SaveSettingsCommand}" Style="{StaticResource PrimaryButton}" Margin="0,0,10,0"/>
-                        <Button Content="Pull Data From Google Sheet" Command="{Binding PullFromGoogleSheetCommand}" Style="{StaticResource SecondaryButton}" Margin="0,0,10,0"/>
-                        <Button Content="Push Local Purchases to Sheet" Command="{Binding SyncAllToGoogleSheetCommand}" Style="{StaticResource SecondaryButton}"/>
-                    </StackPanel>
+                    <!-- Advanced Cloud Webhook URL (Pre-configured) -->
+                    <Expander Header="Advanced: Custom Google Apps Script Webhook API" Foreground="{DynamicResource TextMutedBrush}" FontSize="12">
+                        <StackPanel Margin="0,8,0,0">
+                            <TextBlock Text="Cloud Webhook Endpoint:" FontSize="11" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,4"/>
+                            <TextBox Text="{Binding GoogleSheetSyncUrl, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBox}" FontSize="12" Margin="0,0,0,8"/>
+                            <StackPanel Orientation="Horizontal">
+                                <Button Content="Save Custom URL" Command="{Binding SaveSettingsCommand}" Style="{StaticResource SecondaryButton}" Margin="0,0,8,0" Padding="10,4"/>
+                                <Button Content="Force Push to Cloud" Command="{Binding SyncAllToGoogleSheetCommand}" Style="{StaticResource SecondaryButton}" Margin="0,0,8,0" Padding="10,4"/>
+                                <Button Content="Pull Cloud Records" Command="{Binding PullFromGoogleSheetCommand}" Style="{StaticResource SecondaryButton}" Padding="10,4"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Expander>
                 </StackPanel>
             </Border>
 

@@ -1,4 +1,5 @@
 using System.Net.Http;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using CodexBlaze.PaymentReminder.Core.Models;
@@ -8,14 +9,16 @@ namespace CodexBlaze.PaymentReminder.Core.Services;
 
 public interface ICloudSyncService
 {
+    Task<string> GetUserVaultIdAsync();
+    Task SetUserVaultIdAsync(string vaultId);
+    Task<string> GetSyncEndpointAsync();
+    Task SetSyncEndpointAsync(string endpoint);
     Task<bool> SyncPurchaseAsync(Purchase purchase);
     Task<bool> UpdatePurchaseInCloudAsync(Purchase purchase);
     Task<bool> RecordPaymentInCloudAsync(int purchaseId, string itemName, decimal amountPaid);
     Task<bool> DeletePurchaseFromCloudAsync(int purchaseId, string itemName);
     Task<bool> SyncAllPurchasesAsync(List<Purchase> purchases);
     Task<int> PullFromCloudAsync();
-    Task<string> GetSyncEndpointAsync();
-    Task SetSyncEndpointAsync(string endpoint);
 }
 
 public class CloudSyncService : ICloudSyncService
@@ -23,9 +26,23 @@ public class CloudSyncService : ICloudSyncService
     private readonly ISettingsService _settingsService;
     private readonly Microsoft.EntityFrameworkCore.IDbContextFactory<CodexBlaze.PaymentReminder.Core.Data.AppDbContext> _contextFactory;
     private readonly InstallmentCalculationService _calculationService;
-    private static readonly HttpClient _httpClient = new() { Timeout = TimeSpan.FromSeconds(20) };
 
-    public const string DefaultSyncUrl = "";
+    // Master Free Cloud Vault API (Powered by Google Apps Script - 100% Free, Zero Hosting Cost)
+    public const string DefaultSyncUrl = "https://script.google.com/macros/s/AKfycbwtxeJo6Qm1IysNP_pGgUyAcCVL4mKS5JSVIkNLkiXF6Jk6nmfv9vs2OCVxjoBLVPyj/exec";
+
+    private static readonly HttpClient _httpClient;
+
+    static CloudSyncService()
+    {
+        _httpClient = new HttpClient(new HttpClientHandler
+        {
+            AllowAutoRedirect = true,
+            MaxAutomaticRedirections = 10
+        })
+        {
+            Timeout = TimeSpan.FromSeconds(25)
+        };
+    }
 
     public CloudSyncService(
         ISettingsService settingsService,
@@ -37,9 +54,32 @@ public class CloudSyncService : ICloudSyncService
         _calculationService = calculationService;
     }
 
+    public async Task<string> GetUserVaultIdAsync()
+    {
+        string vault = await _settingsService.GetSettingAsync("UserVaultId", "");
+        if (string.IsNullOrWhiteSpace(vault))
+        {
+            // Auto-generate a secure random 8-character Vault ID (e.g. NX-A892F1)
+            byte[] bytes = new byte[4];
+            RandomNumberGenerator.Fill(bytes);
+            string hex = Convert.ToHexString(bytes).ToUpper();
+            vault = $"NX-{hex}";
+            await _settingsService.SaveSettingAsync("UserVaultId", vault, "CloudVault");
+            Log.Information("Generated new User Vault ID: {VaultId}", vault);
+        }
+        return vault;
+    }
+
+    public async Task SetUserVaultIdAsync(string vaultId)
+    {
+        string clean = string.IsNullOrWhiteSpace(vaultId) ? "" : vaultId.Trim().ToUpper();
+        await _settingsService.SaveSettingAsync("UserVaultId", clean, "CloudVault");
+    }
+
     public async Task<string> GetSyncEndpointAsync()
     {
-        return await _settingsService.GetSettingAsync("GoogleSheetSyncUrl", DefaultSyncUrl);
+        string url = await _settingsService.GetSettingAsync("GoogleSheetSyncUrl", DefaultSyncUrl);
+        return string.IsNullOrWhiteSpace(url) ? DefaultSyncUrl : url;
     }
 
     public async Task SetSyncEndpointAsync(string endpoint)
@@ -52,11 +92,14 @@ public class CloudSyncService : ICloudSyncService
         string endpoint = await GetSyncEndpointAsync();
         if (string.IsNullOrWhiteSpace(endpoint)) return false;
 
+        string vaultId = await GetUserVaultIdAsync();
+
         try
         {
             var payload = new
             {
                 action = "add_purchase",
+                vaultId = vaultId,
                 id = purchase.Id,
                 itemName = purchase.ItemName,
                 provider = purchase.Provider?.Name ?? "Provider",
@@ -73,18 +116,14 @@ public class CloudSyncService : ICloudSyncService
             var response = await _httpClient.PostAsync(endpoint, content);
             if (response.IsSuccessStatusCode)
             {
-                Log.Information("Successfully synced purchase {Id} to Google Sheet & Cloud API.", purchase.Id);
+                Log.Information("Successfully synced purchase {Id} to Vault {Vault}", purchase.Id, vaultId);
                 return true;
             }
-            else
-            {
-                Log.Warning("Cloud sync responded with code: {StatusCode}", response.StatusCode);
-                return false;
-            }
+            return false;
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Failed to sync purchase {Id} to Google Sheet.", purchase.Id);
+            Log.Error(ex, "Failed to sync purchase {Id} to Cloud Vault.", purchase.Id);
             return false;
         }
     }
@@ -94,11 +133,14 @@ public class CloudSyncService : ICloudSyncService
         string endpoint = await GetSyncEndpointAsync();
         if (string.IsNullOrWhiteSpace(endpoint)) return false;
 
+        string vaultId = await GetUserVaultIdAsync();
+
         try
         {
             var payload = new
             {
                 action = "edit_purchase",
+                vaultId = vaultId,
                 id = purchase.Id,
                 itemName = purchase.ItemName,
                 provider = purchase.Provider?.Name ?? "Provider",
@@ -116,7 +158,7 @@ public class CloudSyncService : ICloudSyncService
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Failed to update purchase in cloud {Id}", purchase.Id);
+            Log.Error(ex, "Failed to update purchase in cloud vault {Id}", purchase.Id);
             return false;
         }
     }
@@ -126,11 +168,14 @@ public class CloudSyncService : ICloudSyncService
         string endpoint = await GetSyncEndpointAsync();
         if (string.IsNullOrWhiteSpace(endpoint)) return false;
 
+        string vaultId = await GetUserVaultIdAsync();
+
         try
         {
             var payload = new
             {
                 action = "record_payment",
+                vaultId = vaultId,
                 purchaseId = purchaseId,
                 itemName = itemName,
                 amountPaid = amountPaid
@@ -144,7 +189,7 @@ public class CloudSyncService : ICloudSyncService
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Failed to record payment in cloud for purchase {Id}", purchaseId);
+            Log.Error(ex, "Failed to record payment in cloud vault for purchase {Id}", purchaseId);
             return false;
         }
     }
@@ -154,11 +199,14 @@ public class CloudSyncService : ICloudSyncService
         string endpoint = await GetSyncEndpointAsync();
         if (string.IsNullOrWhiteSpace(endpoint)) return false;
 
+        string vaultId = await GetUserVaultIdAsync();
+
         try
         {
             var payload = new
             {
                 action = "delete_purchase",
+                vaultId = vaultId,
                 id = purchaseId,
                 itemName = itemName
             };
@@ -167,16 +215,11 @@ public class CloudSyncService : ICloudSyncService
             using var content = new StringContent(json, Encoding.UTF8, "application/json");
 
             var response = await _httpClient.PostAsync(endpoint, content);
-            if (response.IsSuccessStatusCode)
-            {
-                Log.Information("Successfully sent delete request for purchase {Id} ('{Name}') to Google Sheet.", purchaseId, itemName);
-                return true;
-            }
-            return false;
+            return response.IsSuccessStatusCode;
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Failed to send delete request to Google Sheet for purchase {Id}.", purchaseId);
+            Log.Error(ex, "Failed to send delete request to Cloud Vault for purchase {Id}.", purchaseId);
             return false;
         }
     }
@@ -197,9 +240,12 @@ public class CloudSyncService : ICloudSyncService
         string endpoint = await GetSyncEndpointAsync();
         if (string.IsNullOrWhiteSpace(endpoint)) return 0;
 
+        string vaultId = await GetUserVaultIdAsync();
+        string requestUrl = $"{endpoint}?vault={Uri.EscapeDataString(vaultId)}";
+
         try
         {
-            var response = await _httpClient.GetAsync(endpoint);
+            var response = await _httpClient.GetAsync(requestUrl);
             if (!response.IsSuccessStatusCode) return 0;
 
             string json = await response.Content.ReadAsStringAsync();
@@ -265,7 +311,6 @@ public class CloudSyncService : ICloudSyncService
                     await context.Purchases.AddAsync(purchase);
                     await context.SaveChangesAsync();
 
-                    // Auto generate installment rows for local database consistency
                     var schedule = _calculationService.GenerateSchedule(
                         remaining > 0 ? remaining : total,
                         installments,
@@ -291,12 +336,12 @@ public class CloudSyncService : ICloudSyncService
                 }
             }
 
-            Log.Information("Pulled {Count} purchases from Google Sheet into local SQLite.", imported);
+            Log.Information("Pulled {Count} purchases from Vault into local SQLite.", imported);
             return imported;
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Failed to pull data from Google Sheet.");
+            Log.Error(ex, "Failed to pull data from Cloud Vault.");
             return 0;
         }
     }

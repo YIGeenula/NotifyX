@@ -50,6 +50,9 @@ public partial class SettingsViewModel : ObservableObject
     private string _currentTheme = "Dark";
 
     [ObservableProperty]
+    private string _userVaultId = string.Empty;
+
+    [ObservableProperty]
     private string _googleSheetSyncUrl = CloudSyncService.DefaultSyncUrl;
 
     [ObservableProperty]
@@ -110,6 +113,7 @@ public partial class SettingsViewModel : ObservableObject
 
         if (settings.TryGetValue("Theme", out var theme)) CurrentTheme = theme;
         if (settings.TryGetValue("GoogleSheetSyncUrl", out var gUrl) && !string.IsNullOrWhiteSpace(gUrl)) GoogleSheetSyncUrl = gUrl;
+        UserVaultId = await _cloudSyncService.GetUserVaultIdAsync();
         if (settings.TryGetValue("NotificationsEnabled", out var ne) && bool.TryParse(ne, out var neb)) NotificationsEnabled = neb;
         if (settings.TryGetValue("Remind7Days", out var r7) && bool.TryParse(r7, out var r7b)) Remind7Days = r7b;
         if (settings.TryGetValue("Remind3Days", out var r3) && bool.TryParse(r3, out var r3b)) Remind3Days = r3b;
@@ -359,6 +363,61 @@ public partial class SettingsViewModel : ObservableObject
         catch (Exception ex)
         {
             StatusMessage = "Could not open browser: " + ex.Message;
+        }
+    }
+
+    [RelayCommand]
+    public async Task OpenWebDashboardAsync()
+    {
+        try
+        {
+            string vault = await _cloudSyncService.GetUserVaultIdAsync();
+            string endpoint = await _cloudSyncService.GetSyncEndpointAsync();
+
+            string url = "https://yigeenula.github.io/NotifyX/";
+            var queryParams = new List<string>();
+
+            if (!string.IsNullOrWhiteSpace(vault))
+            {
+                queryParams.Add($"vault={Uri.EscapeDataString(vault)}");
+            }
+            if (!string.IsNullOrWhiteSpace(endpoint))
+            {
+                queryParams.Add($"api={Uri.EscapeDataString(endpoint)}");
+            }
+
+            if (queryParams.Count > 0)
+            {
+                url += "?" + string.Join("&", queryParams);
+            }
+
+            var psi = new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = url,
+                UseShellExecute = true
+            };
+            System.Diagnostics.Process.Start(psi);
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = "Could not open Web Dashboard: " + ex.Message;
+        }
+    }
+
+    [RelayCommand]
+    public async Task CopyVaultIdAsync()
+    {
+        try
+        {
+            if (!string.IsNullOrWhiteSpace(UserVaultId))
+            {
+                System.Windows.Clipboard.SetText(UserVaultId);
+                StatusMessage = $"Vault ID '{UserVaultId}' copied to clipboard!";
+            }
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = "Failed to copy: " + ex.Message;
         }
     }
 
