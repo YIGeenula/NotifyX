@@ -51,6 +51,7 @@ public partial class App : Application
                 services.AddScoped<INotificationService, NotificationService>();
                 services.AddScoped<ISettingsService, SettingsService>();
                 services.AddScoped<ICloudSyncService, CloudSyncService>();
+                services.AddSingleton<IUpdateService, UpdateService>();
                 services.AddSingleton<IBackupRestoreService>(sp =>
                     new BackupRestoreService(sp.GetRequiredService<IDbContextFactory<AppDbContext>>(), dbPath));
 

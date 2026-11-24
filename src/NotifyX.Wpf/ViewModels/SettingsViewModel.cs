@@ -17,9 +17,34 @@ public partial class SettingsViewModel : ObservableObject
     private readonly INotificationService _notificationService;
     private readonly ICloudSyncService _cloudSyncService;
     private readonly IPurchaseService _purchaseService;
+    private readonly IUpdateService _updateService;
 
     [ObservableProperty]
     private string _currentAppVersion = "1.0.1";
+
+    [ObservableProperty]
+    private bool _isCheckingUpdate;
+
+    [ObservableProperty]
+    private bool _isUpdateAvailable;
+
+    [ObservableProperty]
+    private bool _isDownloadingUpdate;
+
+    [ObservableProperty]
+    private double _downloadProgress;
+
+    [ObservableProperty]
+    private string _updateInfoText = string.Empty;
+
+    [ObservableProperty]
+    private string _latestVersionTag = string.Empty;
+
+    [ObservableProperty]
+    private string _releaseNotes = string.Empty;
+
+    private string? _downloadUrl;
+    private string? _downloadedFilePath;
 
     [ObservableProperty]
     private string _currentTheme = "Dark";
@@ -65,7 +90,8 @@ public partial class SettingsViewModel : ObservableObject
         IBackupRestoreService backupService,
         INotificationService notificationService,
         ICloudSyncService cloudSyncService,
-        IPurchaseService purchaseService)
+        IPurchaseService purchaseService,
+        IUpdateService updateService)
     {
         _settingsService = settingsService;
         _excelService = excelService;
@@ -73,6 +99,8 @@ public partial class SettingsViewModel : ObservableObject
         _notificationService = notificationService;
         _cloudSyncService = cloudSyncService;
         _purchaseService = purchaseService;
+        _updateService = updateService;
+        _currentAppVersion = _updateService.CurrentVersion;
     }
 
     [RelayCommand]
@@ -243,6 +271,95 @@ public partial class SettingsViewModel : ObservableObject
         CodexBlaze.PaymentReminder.Wpf.Services.ToastNotificationManager.ShowToast(testItem.Title, testItem.Message);
         await LoadNotificationsAsync();
         StatusMessage = "Test toast notification displayed and logged!";
+    }
+
+    [RelayCommand]
+    public async Task CheckForUpdatesAsync()
+    {
+        IsCheckingUpdate = true;
+        StatusMessage = "Checking for new software releases on GitHub...";
+        UpdateInfoText = "Checking for updates...";
+
+        try
+        {
+            var result = await _updateService.CheckForUpdatesAsync();
+            if (result.IsUpdateAvailable)
+            {
+                IsUpdateAvailable = true;
+                LatestVersionTag = result.LatestVersion;
+                ReleaseNotes = string.IsNullOrWhiteSpace(result.ReleaseNotes) ? "New update available with performance and security improvements." : result.ReleaseNotes;
+                _downloadUrl = result.DownloadUrl;
+                UpdateInfoText = $"🎉 New version v{result.LatestVersion} is available! (Current: v{result.CurrentVersion})";
+                StatusMessage = $"Update available: v{result.LatestVersion}";
+            }
+            else
+            {
+                IsUpdateAvailable = false;
+                UpdateInfoText = $"NotifyX is up to date! (v{CurrentAppVersion})";
+                StatusMessage = $"You are using the latest version (v{CurrentAppVersion}).";
+            }
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = "Failed to check for updates: " + ex.Message;
+            UpdateInfoText = "Unable to check updates. Please check your internet connection.";
+        }
+        finally
+        {
+            IsCheckingUpdate = false;
+        }
+    }
+
+    [RelayCommand]
+    public async Task DownloadAndInstallUpdateAsync()
+    {
+        if (string.IsNullOrEmpty(_downloadUrl))
+        {
+            StatusMessage = "No direct download link available for this release. Please visit GitHub Releases.";
+            return;
+        }
+
+        try
+        {
+            IsDownloadingUpdate = true;
+            DownloadProgress = 0;
+            StatusMessage = "Downloading latest update package...";
+
+            var progress = new Progress<double>(p => DownloadProgress = Math.Round(p, 1));
+            _downloadedFilePath = await _updateService.DownloadUpdateAsync(_downloadUrl, progress);
+
+            StatusMessage = "Download complete! Applying update and restarting NotifyX...";
+            await Task.Delay(1000);
+
+            _updateService.ApplyUpdateAndRestart(_downloadedFilePath);
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = "Error updating software: " + ex.Message;
+            UpdateInfoText = "Update installation failed: " + ex.Message;
+        }
+        finally
+        {
+            IsDownloadingUpdate = false;
+        }
+    }
+
+    [RelayCommand]
+    public void OpenReleasesPage()
+    {
+        try
+        {
+            var psi = new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = "https://github.com/YIGeenula/NotifyX/releases",
+                UseShellExecute = true
+            };
+            System.Diagnostics.Process.Start(psi);
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = "Could not open browser: " + ex.Message;
+        }
     }
 
     [RelayCommand]

@@ -25,7 +25,7 @@ public class CloudSyncService : ICloudSyncService
     private readonly InstallmentCalculationService _calculationService;
     private static readonly HttpClient _httpClient = new() { Timeout = TimeSpan.FromSeconds(20) };
 
-    public const string DefaultSyncUrl = "https://script.google.com/macros/s/AKfycbwtxeJo6Qm1IysNP_pGgUyAcCVL4mKS5JSVIkNLkiXF6Jk6nmfv9vs2OCVxjoBLVPyj/exec";
+    public const string DefaultSyncUrl = "";
 
     public CloudSyncService(
         ISettingsService settingsService,

@@ -18,6 +18,40 @@
                 <TextBlock Text="{Binding StatusMessage}" Foreground="{DynamicResource PrimaryAccentBrush}" FontWeight="SemiBold"/>
             </Border>
 
+            <!-- Software Updates (GitHub Releases) -->
+            <Border Style="{StaticResource PremiumCard}" Margin="0,0,0,16" Padding="16">
+                <StackPanel>
+                    <DockPanel Margin="0,0,0,8">
+                        <TextBlock Text="🚀 Software Updates &amp; Version" FontWeight="SemiBold" FontSize="15" VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding CurrentAppVersion, StringFormat='Installed: v{0}'}" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Right" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                    </DockPanel>
+                    <TextBlock Text="Check for official updates released on GitHub. Updates are securely downloaded directly from GitHub Releases with full privacy." Style="{StaticResource SubheaderText}" Margin="0,0,0,12"/>
+
+                    <!-- Update status text -->
+                    <TextBlock Text="{Binding UpdateInfoText}" FontWeight="Medium" Foreground="{DynamicResource PrimaryAccentBrush}" Margin="0,0,0,12"/>
+
+                    <!-- Progress bar when downloading -->
+                    <StackPanel Visibility="{Binding IsDownloadingUpdate, Converter={StaticResource BoolToVisConverter}}" Margin="0,0,0,12">
+                        <ProgressBar Value="{Binding DownloadProgress}" Maximum="100" Height="8" Margin="0,0,0,4"/>
+                        <TextBlock Text="{Binding DownloadProgress, StringFormat='Downloading: {0}%'}" FontSize="12" Foreground="{DynamicResource TextMutedBrush}"/>
+                    </StackPanel>
+
+                    <!-- Release Notes when update available -->
+                    <Border Background="{DynamicResource BackgroundBrush}" CornerRadius="6" Padding="10" Margin="0,0,0,12" Visibility="{Binding IsUpdateAvailable, Converter={StaticResource BoolToVisConverter}}">
+                        <StackPanel>
+                            <TextBlock Text="{Binding LatestVersionTag, StringFormat='Release Notes for v{0}:'}" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                            <TextBlock Text="{Binding ReleaseNotes}" TextWrapping="Wrap" Foreground="{DynamicResource TextMutedBrush}"/>
+                        </StackPanel>
+                    </Border>
+
+                    <StackPanel Orientation="Horizontal">
+                        <Button Content="Check for Updates" Command="{Binding CheckForUpdatesCommand}" Style="{StaticResource PrimaryButton}" Margin="0,0,10,0"/>
+                        <Button Content="Download &amp; Install Update" Command="{Binding DownloadAndInstallUpdateCommand}" Visibility="{Binding IsUpdateAvailable, Converter={StaticResource BoolToVisConverter}}" Style="{StaticResource PrimaryButton}" Background="#10B981" Margin="0,0,10,0"/>
+                        <Button Content="View on GitHub Releases" Command="{Binding OpenReleasesPageCommand}" Style="{StaticResource SecondaryButton}"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
             <!-- Appearance -->
             <Border Style="{StaticResource PremiumCard}" Margin="0,0,0,16" Padding="16">
                 <StackPanel>
