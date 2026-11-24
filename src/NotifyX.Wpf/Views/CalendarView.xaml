@@ -1,0 +1,90 @@
+<UserControl x:Class="CodexBlaze.PaymentReminder.Wpf.Views.CalendarView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d" 
+             d:DesignHeight="750" d:DesignWidth="1050">
+    <Grid Margin="0,0,10,0">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Grid Grid.Row="0" Margin="0,0,0,16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel>
+                <TextBlock Text="Payment Calendar" Style="{StaticResource HeaderTitleText}"/>
+                <TextBlock Text="Visual schedule of upcoming due dates, deadlines, and completed payments." Style="{StaticResource SubheaderText}" Margin="0,4,0,0"/>
+            </StackPanel>
+            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                <Button Content="&lt; Prev" Command="{Binding PrevMonthCommand}" Style="{StaticResource SecondaryButton}" Margin="0,0,6,0"/>
+                <Button Content="Today" Command="{Binding TodayCommand}" Style="{StaticResource SecondaryButton}" Margin="0,0,6,0"/>
+                <Button Content="Next &gt;" Command="{Binding NextMonthCommand}" Style="{StaticResource SecondaryButton}"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- Current Month Title -->
+        <TextBlock Grid.Row="1" Text="{Binding MonthTitle}" FontWeight="Bold" FontSize="18" Margin="0,0,0,12"/>
+
+        <!-- Calendar Days Grid (5 weeks x 7 days) -->
+        <Border Grid.Row="2" Style="{StaticResource PremiumCard}" Padding="8">
+            <ItemsControl ItemsSource="{Binding Days}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <UniformGrid Columns="7" Rows="5"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="0.5" Padding="6" Background="{DynamicResource SecondaryBackgroundBrush}" Margin="2" CornerRadius="6">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
+                                <!-- Day Header -->
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                    <TextBlock Text="{Binding Date, StringFormat='{}{0:dd}'}" FontWeight="SemiBold" FontSize="12">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsToday}" Value="True">
+                                                        <Setter Property="Foreground" Value="{DynamicResource PrimaryAccentBrush}"/>
+                                                        <Setter Property="FontWeight" Value="Bold"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding IsCurrentMonth}" Value="False">
+                                                        <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </StackPanel>
+
+                                <!-- Day Installments -->
+                                <ItemsControl Grid.Row="1" ItemsSource="{Binding Installments}" Margin="0,4,0,0">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="4" Padding="4,2" Margin="0,1">
+                                                <StackPanel>
+                                                    <TextBlock Text="{Binding Purchase.ItemName}" FontSize="10" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                                                    <TextBlock Text="{Binding RemainingAmount, Converter={StaticResource CurrencyFormatter}}" FontSize="9" Foreground="{DynamicResource WarningBrush}"/>
+                                                </StackPanel>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </Border>
+    </Grid>
+</UserControl>

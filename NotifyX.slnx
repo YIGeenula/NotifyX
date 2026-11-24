@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="src/NotifyX.Core/NotifyX.Core.csproj" />
+  <Project Path="src/NotifyX.Wpf/NotifyX.Wpf.csproj" />
+  <Project Path="tests/NotifyX.Tests/NotifyX.Tests.csproj" />
+</Solution>

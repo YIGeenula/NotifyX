@@ -1,0 +1,143 @@
+<UserControl x:Class="CodexBlaze.PaymentReminder.Wpf.Views.ReportsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d" 
+             d:DesignHeight="750" d:DesignWidth="1050">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="0,0,10,20">
+            <!-- Header & Filter Bar -->
+            <Border Style="{StaticResource PremiumCard}" Margin="0,0,0,16" Padding="16">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    
+                    <!-- Row 1: Title & Export Actions -->
+                    <Grid Grid.Row="0" Margin="0,0,0,14">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock Text="Financial Reports &amp; Analytics" Style="{StaticResource HeaderTitleText}"/>
+                            <TextBlock Text="Filter statements by timeframe and provider, then download colorful Excel or PDF reports." Style="{StaticResource SubheaderText}" Margin="0,4,0,0"/>
+                        </StackPanel>
+
+                        <!-- Download Action Buttons -->
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Button Content="📥 Download Excel" Command="{Binding DownloadExcelReportCommand}" Style="{StaticResource SecondaryButton}" Margin="0,0,10,0"/>
+                            <Button Content="📄 Download PDF Statement" Command="{Binding DownloadPdfReportCommand}" Style="{StaticResource PrimaryButton}"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Row 2: Filtering Controls -->
+                    <Grid Grid.Row="1">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Timeframe Selection -->
+                        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,16,0">
+                            <TextBlock Text="Timeframe:" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <ComboBox SelectedValue="{Binding SelectedPeriod}" SelectedValuePath="Content" Style="{StaticResource ModernComboBox}" Width="150">
+                                <ComboBoxItem Content="All Time" IsSelected="True"/>
+                                <ComboBoxItem Content="This Month"/>
+                                <ComboBoxItem Content="Last Month"/>
+                                <ComboBoxItem Content="Last 3 Months"/>
+                                <ComboBoxItem Content="This Year"/>
+                                <ComboBoxItem Content="Custom Range"/>
+                            </ComboBox>
+                        </StackPanel>
+
+                        <!-- Provider Selection -->
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,16,0">
+                            <TextBlock Text="Provider:" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <ComboBox ItemsSource="{Binding Providers}" SelectedItem="{Binding SelectedProvider}" Style="{StaticResource ModernComboBox}" Width="140">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Name}"/>
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                        </StackPanel>
+
+                        <!-- Custom Date Range Picker -->
+                        <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Visibility="{Binding IsCustomDateRange, Converter={StaticResource BoolToVisConverter}}">
+                            <TextBlock Text="From:" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <DatePicker SelectedDate="{Binding StartDate}" Height="34" Margin="0,0,10,0"/>
+                            <TextBlock Text="To:" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <DatePicker SelectedDate="{Binding EndDate}" Height="34" Margin="0,0,10,0"/>
+                            <Button Content="Apply" Command="{Binding LoadReportsCommand}" Style="{StaticResource SecondaryButton}" Padding="10,4"/>
+                        </StackPanel>
+
+                        <!-- Status Message -->
+                        <TextBlock Grid.Column="3" Text="{Binding StatusMessage}" Foreground="{DynamicResource SuccessBrush}" FontWeight="SemiBold" VerticalAlignment="Center" FontSize="12"/>
+                    </Grid>
+                </Grid>
+            </Border>
+
+            <!-- Key Summary Card -->
+            <Grid Margin="0,0,0,20">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Border Grid.Column="0" Style="{StaticResource PremiumCard}" Margin="0,0,8,0">
+                    <StackPanel>
+                        <TextBlock Text="LIFETIME COMMITTED" Style="{StaticResource StatCardLabelText}"/>
+                        <TextBlock Text="{Binding TotalSpending, Converter={StaticResource CurrencyFormatter}}" Style="{StaticResource StatCardValueText}" Margin="0,6,0,0"/>
+                    </StackPanel>
+                </Border>
+                <Border Grid.Column="1" Style="{StaticResource PremiumCard}" Margin="8,0,8,0">
+                    <StackPanel>
+                        <TextBlock Text="LIFETIME SETTLED" Foreground="{DynamicResource SuccessBrush}" Style="{StaticResource StatCardLabelText}"/>
+                        <TextBlock Text="{Binding TotalPaid, Converter={StaticResource CurrencyFormatter}}" Foreground="{DynamicResource SuccessBrush}" Style="{StaticResource StatCardValueText}" Margin="0,6,0,0"/>
+                    </StackPanel>
+                </Border>
+                <Border Grid.Column="2" Style="{StaticResource PremiumCard}" Margin="8,0,0,0">
+                    <StackPanel>
+                        <TextBlock Text="CURRENT OUTSTANDING" Foreground="{DynamicResource PrimaryAccentBrush}" Style="{StaticResource StatCardLabelText}"/>
+                        <TextBlock Text="{Binding TotalOutstanding, Converter={StaticResource CurrencyFormatter}}" Foreground="{DynamicResource PrimaryAccentBrush}" Style="{StaticResource StatCardValueText}" Margin="0,6,0,0"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <!-- Provider Comparison Table -->
+            <Border Style="{StaticResource PremiumCard}" Margin="0,0,0,20" Padding="14">
+                <StackPanel>
+                    <TextBlock Text="Provider-wise Spending and Settlement Analysis" FontWeight="SemiBold" FontSize="15" Margin="0,0,0,12"/>
+                    <DataGrid ItemsSource="{Binding ProviderBreakdown}" Style="{StaticResource ModernDataGrid}">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Provider" Binding="{Binding ProviderName}" Width="1.5*"/>
+                            <DataGridTextColumn Header="Total Committed" Binding="{Binding TotalSpent, Converter={StaticResource CurrencyFormatter}}" Width="*"/>
+                            <DataGridTextColumn Header="Total Settled" Binding="{Binding TotalPaid, Converter={StaticResource CurrencyFormatter}}" Width="*"/>
+                            <DataGridTextColumn Header="Outstanding Balance" Binding="{Binding TotalOutstanding, Converter={StaticResource CurrencyFormatter}}" Width="*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </StackPanel>
+            </Border>
+
+            <!-- 12-Month Historical Breakdown -->
+            <Border Style="{StaticResource PremiumCard}" Padding="14">
+                <StackPanel>
+                    <TextBlock Text="Annual Payment History (Past 12 Months)" FontWeight="SemiBold" FontSize="15" Margin="0,0,0,12"/>
+                    <DataGrid ItemsSource="{Binding MonthlyTrends}" Style="{StaticResource ModernDataGrid}">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Month" Binding="{Binding MonthName}" Width="1.5*"/>
+                            <DataGridTextColumn Header="Year" Binding="{Binding Year}" Width="*"/>
+                            <DataGridTextColumn Header="Scheduled Due (LKR)" Binding="{Binding TotalDue, Converter={StaticResource CurrencyFormatter}}" Width="*"/>
+                            <DataGridTextColumn Header="Actual Paid (LKR)" Binding="{Binding TotalPaid, Converter={StaticResource CurrencyFormatter}}" Width="*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

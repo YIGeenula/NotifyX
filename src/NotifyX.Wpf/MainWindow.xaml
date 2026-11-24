@@ -1,0 +1,137 @@
+<Window x:Class="CodexBlaze.PaymentReminder.Wpf.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="clr-namespace:CodexBlaze.PaymentReminder.Wpf.ViewModels"
+        xmlns:views="clr-namespace:CodexBlaze.PaymentReminder.Wpf.Views"
+        xmlns:tb="clr-namespace:Hardcodet.Wpf.TaskbarNotification;assembly=Hardcodet.NotifyIcon.Wpf"
+        mc:Ignorable="d"
+        Title="NotifyX - Payment Reminder" Height="800" Width="1280"
+        Icon="NotifyX_icon.ico"
+        MinHeight="700" MinWidth="1050"
+        WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource MainBackgroundBrush}">
+
+    <Window.Resources>
+        <DataTemplate DataType="{x:Type vm:DashboardViewModel}">
+            <views:DashboardView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:PurchasesViewModel}">
+            <views:PurchasesView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:PaymentsViewModel}">
+            <views:PaymentsView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:CalendarViewModel}">
+            <views:CalendarView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:ReportsViewModel}">
+            <views:ReportsView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:SettingsViewModel}">
+            <views:SettingsView/>
+        </DataTemplate>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="240"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Left Sidebar Navigation -->
+        <Border Grid.Column="0" Background="{DynamicResource SecondaryBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="0,0,1,0">
+            <Grid Margin="16,20,16,16">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- Brand Header -->
+                <StackPanel Grid.Row="0" Margin="4,4,0,26">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="Notify" FontWeight="ExtraBold" FontSize="26" Foreground="{DynamicResource PrimaryTextBrush}" FontFamily="Segoe UI Variable Display, Segoe UI, sans-serif"/>
+                        <TextBlock Text="X" FontWeight="Black" FontSize="28" Margin="1,-2,0,0" FontFamily="Segoe UI Variable Display, Segoe UI, sans-serif">
+                            <TextBlock.Foreground>
+                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                    <GradientStop Color="#A78BFA" Offset="0.0"/>
+                                    <GradientStop Color="#06B6D4" Offset="1.0"/>
+                                </LinearGradientBrush>
+                            </TextBlock.Foreground>
+                        </TextBlock>
+                    </StackPanel>
+                    <TextBlock Text="PAYMENT REMINDER" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource SecondaryTextBrush}" Margin="2,3,0,0" Opacity="0.85"/>
+                </StackPanel>
+
+                <!-- Navigation Links -->
+                <StackPanel Grid.Row="1">
+                    <RadioButton Content="📊 Dashboard" Style="{StaticResource NavButton}" IsChecked="True" Command="{Binding NavigateCommand}" CommandParameter="Dashboard"/>
+                    <RadioButton Content="🛍️ Purchases" Style="{StaticResource NavButton}" Command="{Binding NavigateCommand}" CommandParameter="Purchases"/>
+                    <RadioButton Content="💳 Installments &amp; Pay" Style="{StaticResource NavButton}" Command="{Binding NavigateCommand}" CommandParameter="Payments"/>
+                    <RadioButton Content="📅 Calendar" Style="{StaticResource NavButton}" Command="{Binding NavigateCommand}" CommandParameter="Calendar"/>
+                    <RadioButton Content="📈 Reports &amp; Analytics" Style="{StaticResource NavButton}" Command="{Binding NavigateCommand}" CommandParameter="Reports"/>
+                    <RadioButton Content="⚙️ Settings &amp; Backup" Style="{StaticResource NavButton}" Command="{Binding NavigateCommand}" CommandParameter="Settings"/>
+                </StackPanel>
+
+                <!-- Bottom Status -->
+                <Border Grid.Row="2" Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12">
+                    <StackPanel>
+                        <TextBlock Text="SYSTEM STATUS" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource MutedTextBrush}" Margin="0,0,0,4"/>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,2">
+                            <Ellipse Width="8" Height="8" Fill="{DynamicResource SuccessBrush}" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="Database Connected" FontSize="11" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                        </StackPanel>
+                        <TextBlock Text="Version 1.0.0 (Release)" FontSize="11" Foreground="{DynamicResource MutedTextBrush}"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Border>
+
+        <!-- Right Content Area -->
+        <Grid Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="64"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- Top Header Bar -->
+            <Border Grid.Row="0" Background="{DynamicResource SecondaryBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="0,0,0,1" Padding="24,0">
+                <Grid VerticalAlignment="Center">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Page Title -->
+                    <TextBlock Text="{Binding CurrentPageTitle}" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
+
+                    <!-- Right Controls: Date -->
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding CurrentDateDisplay}" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center" FontSize="13"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- Dynamic Body Content -->
+            <ContentControl Grid.Row="1" Content="{Binding CurrentPage}" Margin="24,20,24,20"/>
+        </Grid>
+
+        <!-- Hardcodet System Tray Icon -->
+        <tb:TaskbarIcon x:Name="NotifyIcon"
+                        IconSource="NotifyX_icon.ico"
+                        ToolTipText="NotifyX - Payment Reminder"
+                        TrayMouseDoubleClick="NotifyIcon_TrayMouseDoubleClick">
+            <tb:TaskbarIcon.ContextMenu>
+                <ContextMenu>
+                    <MenuItem Header="Open NotifyX" Click="MenuOpen_Click" FontWeight="Bold"/>
+                    <MenuItem Header="Check Reminders" Click="MenuCheckReminders_Click"/>
+                    <Separator/>
+                    <MenuItem Header="Exit Application" Click="MenuExit_Click"/>
+                </ContextMenu>
+            </tb:TaskbarIcon.ContextMenu>
+        </tb:TaskbarIcon>
+    </Grid>
+</Window>

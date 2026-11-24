@@ -1,0 +1,117 @@
+<UserControl x:Class="CodexBlaze.PaymentReminder.Wpf.Views.SettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d" 
+             d:DesignHeight="750" d:DesignWidth="1050">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="0,0,10,20">
+            <!-- Header -->
+            <StackPanel Margin="0,0,0,16">
+                <TextBlock Text="System Settings &amp; Preferences" Style="{StaticResource HeaderTitleText}"/>
+                <TextBlock Text="Configure reminders, theme, backup, and Excel export/import options." Style="{StaticResource SubheaderText}" Margin="0,4,0,0"/>
+            </StackPanel>
+
+            <!-- Status Banner -->
+            <Border Background="{DynamicResource CardHoverBrush}" BorderBrush="{DynamicResource PrimaryAccentBrush}" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,0,0,16">
+                <TextBlock Text="{Binding StatusMessage}" Foreground="{DynamicResource PrimaryAccentBrush}" FontWeight="SemiBold"/>
+            </Border>
+
+            <!-- Appearance -->
+            <Border Style="{StaticResource PremiumCard}" Margin="0,0,0,16" Padding="16">
+                <StackPanel>
+                    <TextBlock Text="Appearance &amp; Theme" FontWeight="SemiBold" FontSize="15" Margin="0,0,0,8"/>
+                    <TextBlock Text="Choose between Premium Dark mode and Clean Light mode." Style="{StaticResource SubheaderText}" Margin="0,0,0,12"/>
+                    <StackPanel Orientation="Horizontal">
+                        <Button Content="Dark Theme" Command="{Binding SwitchThemeCommand}" CommandParameter="Dark" Style="{StaticResource SecondaryButton}" Margin="0,0,10,0"/>
+                        <Button Content="Light Theme" Command="{Binding SwitchThemeCommand}" CommandParameter="Light" Style="{StaticResource SecondaryButton}"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- Google Sheet & Cloud Sync -->
+            <Border Style="{StaticResource PremiumCard}" Margin="0,0,0,16" Padding="16">
+                <StackPanel>
+                    <TextBlock Text="☁️ Google Sheet &amp; Cloud Webhook Sync" FontWeight="SemiBold" FontSize="15" Margin="0,0,0,8"/>
+                    <TextBlock Text="Automatically syncs each purchase and payment to your connected Google Sheet and Cloud API." Style="{StaticResource SubheaderText}" Margin="0,0,0,12"/>
+
+                    <TextBlock Text="Google Apps Script Web App URL" FontWeight="Medium" Margin="0,0,0,4"/>
+                    <TextBox Text="{Binding GoogleSheetSyncUrl, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBox}" Margin="0,0,0,12"/>
+
+                    <StackPanel Orientation="Horizontal">
+                        <Button Content="Save Sync URL" Command="{Binding SaveSettingsCommand}" Style="{StaticResource PrimaryButton}" Margin="0,0,10,0"/>
+                        <Button Content="Pull Data From Google Sheet" Command="{Binding PullFromGoogleSheetCommand}" Style="{StaticResource SecondaryButton}" Margin="0,0,10,0"/>
+                        <Button Content="Push Local Purchases to Sheet" Command="{Binding SyncAllToGoogleSheetCommand}" Style="{StaticResource SecondaryButton}"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- Notification Rules -->
+            <Border Style="{StaticResource PremiumCard}" Margin="0,0,0,16" Padding="16">
+                <StackPanel>
+                    <TextBlock Text="Desktop Notification Preferences" FontWeight="SemiBold" FontSize="15" Margin="0,0,0,8"/>
+                    <TextBlock Text="Customize reminder thresholds before installment due dates." Style="{StaticResource SubheaderText}" Margin="0,0,0,12"/>
+
+                    <CheckBox Content="Enable System Notifications" IsChecked="{Binding NotificationsEnabled}" Margin="0,0,0,8"/>
+                    <CheckBox Content="Remind 7 days before due date" IsChecked="{Binding Remind7Days}" Margin="0,0,0,8"/>
+                    <CheckBox Content="Remind 3 days before due date" IsChecked="{Binding Remind3Days}" Margin="0,0,0,8"/>
+                    <CheckBox Content="Remind 1 day before due date" IsChecked="{Binding Remind1Day}" Margin="0,0,0,8"/>
+                    <CheckBox Content="Remind on due date" IsChecked="{Binding RemindDueDay}" Margin="0,0,0,8"/>
+                    <CheckBox Content="Remind when payment is overdue" IsChecked="{Binding RemindOverdue}" Margin="0,0,0,12"/>
+
+                    <StackPanel Orientation="Horizontal">
+                        <Button Content="Save Notification Preferences" Command="{Binding SaveSettingsCommand}" Style="{StaticResource PrimaryButton}" Margin="0,0,10,0"/>
+                        <Button Content="Trigger Test Notification" Command="{Binding TriggerTestNotificationCommand}" Style="{StaticResource SecondaryButton}"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- Backup & Restore -->
+            <Border Style="{StaticResource PremiumCard}" Margin="0,0,0,16" Padding="16">
+                <StackPanel>
+                    <TextBlock Text="Database Backup &amp; Restore" FontWeight="SemiBold" FontSize="15" Margin="0,0,0,8"/>
+                    <TextBlock Text="Generate compressed .cbz backup archives or restore from previous points." Style="{StaticResource SubheaderText}" Margin="0,0,0,12"/>
+
+                    <StackPanel Orientation="Horizontal">
+                        <Button Content="Create New Backup (.cbz)" Command="{Binding CreateBackupCommand}" Style="{StaticResource PrimaryButton}" Margin="0,0,10,0"/>
+                        <Button Content="Restore from Backup (.cbz)" Command="{Binding RestoreBackupCommand}" Style="{StaticResource SecondaryButton}"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- Excel Export & Import -->
+            <Border Style="{StaticResource PremiumCard}" Margin="0,0,0,16" Padding="16">
+                <StackPanel>
+                    <TextBlock Text="ClosedXML Excel Export &amp; Import" FontWeight="SemiBold" FontSize="15" Margin="0,0,0,8"/>
+                    <TextBlock Text="Export all purchases, schedules, and payment histories to a multi-sheet spreadsheet or restore from an existing Excel template." Style="{StaticResource SubheaderText}" Margin="0,0,0,12"/>
+
+                    <StackPanel Orientation="Horizontal">
+                        <Button Content="Export to Excel (.xlsx)" Command="{Binding ExportExcelCommand}" Style="{StaticResource PrimaryButton}" Margin="0,0,10,0"/>
+                        <Button Content="Import from Excel (.xlsx)" Command="{Binding ImportExcelCommand}" Style="{StaticResource SecondaryButton}"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- Notification History Log -->
+            <Border Style="{StaticResource PremiumCard}" Padding="16">
+                <StackPanel>
+                    <TextBlock Text="Recent Notification Logs" FontWeight="SemiBold" FontSize="15" Margin="0,0,0,8"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                        <TextBlock Text="Audit log of alert notifications recorded by the reminder scheduler." Style="{StaticResource SubheaderText}" VerticalAlignment="Center"/>
+                        <Button Content="Clear Logs" Command="{Binding ClearNotificationLogsCommand}" Style="{StaticResource SecondaryButton}" Margin="16,0,0,0" Padding="10,4"/>
+                    </StackPanel>
+
+                    <DataGrid ItemsSource="{Binding NotificationHistoryList}" Style="{StaticResource ModernDataGrid}" MaxHeight="220">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Type" Binding="{Binding NotificationType}" Width="100"/>
+                            <DataGridTextColumn Header="Title" Binding="{Binding Title}" Width="200"/>
+                            <DataGridTextColumn Header="Message" Binding="{Binding Message}" Width="2.5*"/>
+                            <DataGridTextColumn Header="Sent Timestamp" Binding="{Binding SentAt, StringFormat='yyyy-MM-dd HH:mm'}" Width="140"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

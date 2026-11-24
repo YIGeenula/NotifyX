@@ -1,0 +1,32 @@
+## Build & Dependency Cache
+.dotnet_home/
+.nuget_packages/
+.appdata/
+.localappdata/
+.userprofile/
+
+## Build Artifacts & Binaries
+**/bin/
+**/obj/
+publish/
+installer_dist/
+*.exe
+*.dll
+*.pdb
+
+## User / Local Secrets & Local Databases
+*.db
+*.db-shm
+*.db-wal
+*.cbz
+*.log
+logs/
+test_report.html
+
+## Visual Studio & Rider
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+.idea/
